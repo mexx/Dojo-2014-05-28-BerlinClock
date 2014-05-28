@@ -1,6 +1,7 @@
 ﻿module BerlinClock
 
 let clock time =
+    let Red = "R"
     let Yellow = "Y"
     let Off = "O"
 
@@ -11,21 +12,38 @@ let clock time =
         | 0 -> Yellow
         | _ -> Off
 
-    let formatRow3 minute =
-        match (toInt minute) / 5 with
-        | 0 -> "OOOOOOOOOOO"
-        | _ -> "YOOOOOOOOOO"
-
-    let formatRow4 minute =
-        let underFiveMinutes = (toInt minute) % 5
+    let format modulo on number =
+        let count = number % modulo
         seq {
-            yield! Seq.init underFiveMinutes (fun _ -> Yellow)
-            yield! Seq.init (4 - underFiveMinutes) (fun _ -> Off)
+            yield! Seq.init count on
+            yield! Seq.init (modulo - count - 1) (fun _ -> Off)
         }
         |> Seq.reduce (+)
 
+    let formatRow1 (hourTens, hour) =
+        ((toInt hourTens) * 10 + (toInt hour)) / 5
+        |> format 5 (fun _ -> Red)
+
+    let formatRow2 hour =
+        toInt hour
+        |> format 5 (fun _ -> Red)
+
+    let formatRow3 (minuteTens, minute) =
+        ((toInt minuteTens) * 10 + (toInt minute)) / 5
+        |> format 12 (fun index -> if (index + 1) % 3 = 0 then Red else Yellow)
+
+    let formatRow4 minute =
+        toInt minute
+        |> format 5 (fun _ -> Yellow)
+
     match time |> List.ofSeq with
-    | [_; _; ':'; minuteTens; minute; ':'; _; second] -> sprintf "%s\nOOOO\nOOOO\n%s\n%s" (second |> formatSeconds) (minute |> formatRow3) (minute |> formatRow4)
+    | [hourTens; hour; ':'; minuteTens; minute; ':'; _; second] ->
+        sprintf "%s\n%s\n%s\n%s\n%s"
+            (second |> formatSeconds)
+            ((hourTens, hour) |> formatRow1)
+            (hour |> formatRow2)
+            ((minuteTens, minute) |> formatRow3)
+            (minute |> formatRow4)
 
 open Xunit
 open Xunit.Extensions
@@ -40,6 +58,13 @@ open FsUnit.Xunit
 [<InlineData("00:05:00", "Y\nOOOO\nOOOO\nYOOOOOOOOOO\nOOOO")>]
 [<InlineData("00:07:00", "Y\nOOOO\nOOOO\nYOOOOOOOOOO\nYYOO")>]
 [<InlineData("00:10:00", "Y\nOOOO\nOOOO\nYYOOOOOOOOO\nOOOO")>]
+[<InlineData("00:15:00", "Y\nOOOO\nOOOO\nYYROOOOOOOO\nOOOO")>]
+[<InlineData("01:00:00", "Y\nOOOO\nROOO\nOOOOOOOOOOO\nOOOO")>]
+[<InlineData("05:00:00", "Y\nROOO\nOOOO\nOOOOOOOOOOO\nOOOO")>]
+
+[<InlineData("13:17:01", "O\nRROO\nRRRO\nYYROOOOOOOO\nYYOO")>]
+[<InlineData("23:59:59", "O\nRRRR\nRRRO\nYYRYYRYYRYY\nYYYY")>]
+[<InlineData("24:00:00", "Y\nRRRR\nRRRR\nOOOOOOOOOOO\nOOOO")>]
 let correctClock (input, expected)=
     input
     |> clock
