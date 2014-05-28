@@ -11,6 +11,11 @@ let clock time =
         | 0 -> Yellow
         | _ -> Off
 
+    let formatRow3 minute =
+        match (toInt minute) / 5 with
+        | 0 -> "OOOOOOOOOOO"
+        | _ -> "YOOOOOOOOOO"
+
     let formatRow4 minute =
         let underFiveMinutes = (toInt minute) % 5
         seq {
@@ -20,31 +25,24 @@ let clock time =
         |> Seq.reduce (+)
 
     match time |> List.ofSeq with
-    | [_; _; _; _; minute; _; _; second] -> sprintf "%s\nOOOO\nOOOO\nOOOOOOOOOOO\n%s" (second |> formatSeconds) (minute |> formatRow4)
+    | [_; _; _; _; minute; _; _; second] -> sprintf "%s\nOOOO\nOOOO\n%s\n%s" (second |> formatSeconds) (minute |> formatRow3) (minute |> formatRow4)
 
 open Xunit
+open Xunit.Extensions
 open FsUnit.Xunit
 
-[<Fact>]
-let Zero ()=
-    "00:00:00"
+[<Theory>]
+[<InlineData("00:00:00", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO")>]
+[<InlineData("00:00:01", "O\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO")>]
+[<InlineData("00:00:02", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO")>]
+[<InlineData("00:01:00", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nYOOO")>]
+[<InlineData("00:03:00", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nYYYO")>]
+[<InlineData("00:05:00", "Y\nOOOO\nOOOO\nYOOOOOOOOOO\nOOOO")>]
+let correctClock (input, expected)=
+    input
     |> clock
-    |> should equal "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO"
+    |> should equal expected
 
 [<Fact>]
-let oneSecond ()=
-    "00:00:01"
-    |> clock
-    |> should equal "O\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO"
-
-[<Fact>]
-let twoSecond ()=
-    "00:00:02"
-    |> clock
-    |> should equal "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nOOOO"
-
-[<Fact>]
-let oneMinute ()=
-    "00:01:00"
-    |> clock
-    |> should equal "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nYOOO"
+let pokeNCrunch ()=
+    true |> should equal true
