@@ -25,7 +25,7 @@ let clock time =
         |> Seq.reduce (+)
 
     match time |> List.ofSeq with
-    | [_; _; _; _; minute; _; _; second] -> sprintf "%s\nOOOO\nOOOO\n%s\n%s" (second |> formatSeconds) (minute |> formatRow3) (minute |> formatRow4)
+    | [_; _; ':'; minuteTens; minute; ':'; _; second] -> sprintf "%s\nOOOO\nOOOO\n%s\n%s" (second |> formatSeconds) (minute |> formatRow3) (minute |> formatRow4)
 
 open Xunit
 open Xunit.Extensions
@@ -38,6 +38,8 @@ open FsUnit.Xunit
 [<InlineData("00:01:00", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nYOOO")>]
 [<InlineData("00:03:00", "Y\nOOOO\nOOOO\nOOOOOOOOOOO\nYYYO")>]
 [<InlineData("00:05:00", "Y\nOOOO\nOOOO\nYOOOOOOOOOO\nOOOO")>]
+[<InlineData("00:07:00", "Y\nOOOO\nOOOO\nYOOOOOOOOOO\nYYOO")>]
+[<InlineData("00:10:00", "Y\nOOOO\nOOOO\nYYOOOOOOOOO\nOOOO")>]
 let correctClock (input, expected)=
     input
     |> clock
