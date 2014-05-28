@@ -2,6 +2,7 @@
 // See the 'F# Tutorial' project for more help.
 
 [<EntryPoint>]
-let main argv = 
-    printfn "%A" argv
+let main argv =
+    BerlinClock.clock argv.[0]
+    |> printf "%s"
     0 // return an integer exit code
